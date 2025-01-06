@@ -1,6 +1,8 @@
 from typing import Optional
 import torch
+import mimetypes
 import speech_recognition as sr
+from pydub import AudioSegment
 from transformers import MBartForConditionalGeneration, MBartTokenizer
 from lingua import Language, LanguageDetectorBuilder, IsoCode639_1
 
@@ -58,6 +60,16 @@ class AudioProcessor:
                 return {"error": "An error occured during transcription"}
 
     def process_audio(self, file: str, target_lang: str = 'en_XX'):
+        filename = ""
+        if mimetypes.guess_type(file) == "audio/mpeg":
+            audio = AudioSegment.from_mp3(file)
+            filename = f"{uuid.uuid4()}.wav"
+            audio.export(f"{uuid.uuid4()}.wav", format="wav")
+        if mimetypes.guess_type(file) == "audio/ogg":
+            audio = AudioSegment.from_ogg(file)
+            filename = f"{uuid.uuid4()}.wav"
+            audio.export(f"{uuid.uuid4()}.wav", format="wav")
+        file = filename
         transcription = self.speech_to_text(file)
         if transcription.get("error"):
             return {"error": "Unable to get the transcription for the given audio"}

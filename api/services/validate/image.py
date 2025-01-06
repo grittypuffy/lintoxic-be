@@ -1,10 +1,10 @@
 import asyncio
 
+from api.services.processors.nsfw.image import NSFWImageClassificationModel
 from api.services.processors.image import extract_text
 from api.services.validate.text import evaluate_text
-from api.config import AppConfig, get_config
 
-config: AppConfig = get_config()
+nsfw_image_classifier = NSFWImageClassificationModel.get_instance()
 
 
 async def evaluate_image(path: str):
@@ -15,7 +15,7 @@ async def evaluate_image(path: str):
         if result.get("status"):
             return result
 
-    nsfw_result = config.nsfw_image_classifier.predict(path)
+    nsfw_result = nsfw_image_classifier.predict(path)
 
     if nsfw_result.get("status"):
         return nsfw_result

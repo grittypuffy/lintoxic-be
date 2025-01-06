@@ -13,7 +13,6 @@ detoxify = "^0.5.2"
 asyncio = "^3.4.3"
 aiohttp = "^3.11.11"
 torch = "^2.5.1"
-pillow = "^11.0.0"
 opencv-python = "^4.10.0.84"
 pytesseract = "^0.3.13"
 logging = "^0.4.9.6"
@@ -27,6 +26,8 @@ python-dotenv = "^1.0.1"
 celery = {version = "^5.4.0", extras = ["redis"]}
 redis = "^5.2.1"
 python-multipart = "^0.0.20"
+moviepy = "^2.1.1"
+pydub = "^0.25.1"
 
 
 [build-system]

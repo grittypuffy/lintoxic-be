@@ -1,13 +1,13 @@
 import asyncio
 
 from api.services.validate.text import evaluate_text
-from api.config import AppConfig, get_config
+from api.services.processors.audio import AudioProcessor
 
-config: AppConfig = get_config()
+audio_processor = AudioProcessor.get_instance()
 
 
 async def evaluate_audio(path: str):
-    transcription = config.audio_processor.process_audio(path)
+    transcription = audio_processor.process_audio(path)
 
     if (text := transcription.get("transcription")):
         result = await evaluate_text(text)
