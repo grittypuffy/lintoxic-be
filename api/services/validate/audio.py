@@ -8,7 +8,6 @@ audio_processor = AudioProcessor.get_instance()
 
 async def evaluate_audio(path: str):
     transcription = audio_processor.process_audio(path)
-
     if (text := transcription.get("transcription")):
         result = await evaluate_text(text)
         if result.get("status"):

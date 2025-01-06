@@ -62,7 +62,7 @@ class TamilToxicContentClassifier:
                                 truncation=True, padding=True)
         outputs = self.model(**inputs)
         result = self.pipeline(text)[0]
-        match result:
+        match result.get("label", ""):
             case "Not_offensive":
                 return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "toxic": False}
             case "Off_target_other":

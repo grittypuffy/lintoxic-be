@@ -61,15 +61,15 @@ class AudioProcessor:
 
     def process_audio(self, file: str, target_lang: str = 'en_XX'):
         filename = ""
-        if mimetypes.guess_type(file) == "audio/mpeg":
+        if mimetypes.guess_type(file)[0] == "audio/mpeg":
             audio = AudioSegment.from_mp3(file)
-            filename = f"{uuid.uuid4()}.wav"
-            audio.export(f"{uuid.uuid4()}.wav", format="wav")
-        if mimetypes.guess_type(file) == "audio/ogg":
+            filename = file.replace(".mp3", ".wav")
+            audio.export(filename, format="wav")
+        if mimetypes.guess_type(file)[0] == "audio/ogg":
             audio = AudioSegment.from_ogg(file)
-            filename = f"{uuid.uuid4()}.wav"
-            audio.export(f"{uuid.uuid4()}.wav", format="wav")
-        file = filename
+            filename = file.replace(".ogg", ".wav")
+            audio.export(filename, format="wav")
+        file = filename if filename != "" else file
         transcription = self.speech_to_text(file)
         if transcription.get("error"):
             return {"error": "Unable to get the transcription for the given audio"}
@@ -77,7 +77,7 @@ class AudioProcessor:
         detected_lang = self.predict_language(
             transcription.get("transcription"))
         if detected_lang == IsoCode639_1.EN:
-            return transcription.get("transcription")
+            return {"transcription": transcription.get("transcription")}
 
         if not detected_lang:
             return {"error": "Unable to detect language for the given transcription"}

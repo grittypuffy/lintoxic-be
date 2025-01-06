@@ -77,7 +77,6 @@ class VideoProcessor:
         image_files = glob.glob(os.path.join(images_dir, "*.jpg"))
         num_workers = min(multiprocessing.cpu_count(), 8)
         for image_file in image_files:
-            print(image_file)
             result = await evaluate_image(image_file)
             if result.get("status"):
                 return result
@@ -101,7 +100,6 @@ class VideoProcessor:
 
             return os.path.join(temp_dir_name, "audio.flac")
         except Exception as e:
-            print(False, f"Error occurred: {str(e)}")
             return "Error occurred: " + str(e)
 
     async def process_video(self, path: str):

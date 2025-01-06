@@ -49,7 +49,7 @@ async def update_log(timestamp: int, user_id: str, process_id: str, completed: b
             "labels": result.get("labels", None)
         } if result else None
     }
-    db_result = await config.db["logs"].update_one({"_id": bson.objectid.ObjectId(inserted_id)}, {"$set": db_document})
+    db_result = await config.db["logs"].update_one({"_id": bson.objectid.ObjectId(object_id)}, {"$set": db_document})
     return db_result
 
 
@@ -74,10 +74,8 @@ async def upload_file(file_content: bytes, filename: str, filetype: str, process
         case "image/png" | "image/jpeg":
             result = await evaluate_image(hashed_file_path)
             if result.get("status"):
-                db_result = await config.db["logs"].insert_one(db_document)
                 insertion_id = await update_log(timestamp=timestamp, user_id=user_id, process_id=process_id,
                                                 completed=True, filename=filename, filetype=filetype, content=None, result=result, object_id=pending_insertion_id)
-                print(insertion_id)
                 return result
 
         case "text/plain":
@@ -89,7 +87,7 @@ async def upload_file(file_content: bytes, filename: str, filetype: str, process
                                                 completed=True, filename=filename, filetype=filetype, content=None, result=result, object_id=pending_insertion_id)
                 return result
 
-        case "audio/wav" | "audio/flac":
+        case "audio/wav" | "audio/flac" | "audio/mpeg" | "audio/x-flac":
             result = await evaluate_audio(hashed_file_path)
             if result.get("status"):
                 insertion_id = await update_log(timestamp=timestamp, user_id=user_id, process_id=process_id,
