@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "lintoxic-api"
+version = "0.1.0"
+description = "Linter for toxic content and beyond"
+authors = ["grittypuffy <grittypuffy@riseup.net>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = { version = "^0.115.6", extras = ["all"] }
+detoxify = "^0.5.2"
+asyncio = "^3.4.3"
+aiohttp = "^3.11.11"
+torch = "^2.5.1"
+pillow = "^11.0.0"
+opencv-python = "^4.10.0.84"
+pytesseract = "^0.3.13"
+logging = "^0.4.9.6"
+protobuf = "^5.29.2"
+speechrecognition = "^3.13.0"
+lingua-language-detector = {version= "^1.4.0", python = ">=3.12,<3.14"}
+streamlit = "^1.41.1"
+motor = "^3.6.0"
+pydantic-settings = "^2.7.1"
+python-dotenv = "^1.0.1"
+celery = {version = "^5.4.0", extras = ["redis"]}
+redis = "^5.2.1"
+python-multipart = "^0.0.20"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

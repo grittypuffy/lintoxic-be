@@ -1,0 +1,45 @@
+services:
+  lintoxic-redis:
+    image: redis:latest
+    container_name: lintoxic-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - lintoxic_redis_data:/data/lintoxic/redis
+    networks:
+      - lintoxic_network
+    restart: always
+
+  lintoxic-database:
+    image: "mongo:latest"
+    container_name: "lintoxic-database"
+    ports:
+      - "27017:27017"  # MongoDB default port
+    volumes:
+      - lintoxic_mongo_data:/data/lintoxic/mongo  # Persist MongoDB data
+    networks:
+      - lintoxic_network
+    restart: always
+
+  lintoxic_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - lintoxic-redis
+      - lintoxic-database
+    networks:
+      - lintoxic_network
+
+
+networks:
+  lintoxic_network:
+    driver: bridge
+
+volumes:
+  lintoxic_mongo_data:
+    driver: local
+
+  lintoxic_redis_data:
+    driver: local
+
