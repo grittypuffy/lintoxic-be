@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 import multiprocessing
 import glob
 
-from lintoxic.utils.audio import AudioProcessor
+from api.services.processors.audio import AudioProcessor
+from api.services.processors.nsfw.image import NSFWImageClassificationModel
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ class VideoProcessor:
             raise Exception(
                 "This is a singleton class, use the get_instance() method.")
         self.audio_processor = AudioProcessor.get_instance()
-        self.image_processor = NSFWImageClassificationModel()
+        self.image_processor = NSFWImageClassificationModel.get_instance()
 
     def create_temporary_folder(self, temp_dir_name=None):
         preprocessing_dir = os.getenv("PREPROCESSING_DIR") if os.getenv(

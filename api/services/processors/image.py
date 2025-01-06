@@ -17,7 +17,8 @@ def preprocess_image(image: Image):
     return blurred_img
 
 
-def extract_text(image: Image):
+def extract_text(path: str):
+    image = Image.open(path)
     processed_image = preprocess_image(image)
 
     text = pytesseract.image_to_string(processed_image)

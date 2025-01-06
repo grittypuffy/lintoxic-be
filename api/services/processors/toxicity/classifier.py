@@ -23,18 +23,19 @@ class ToxicContentClassifier:
     @torch.no_grad()
     def predict(self, text: str):
         prediction = self.model.predict(text)
-        offensive_entries = {key: value for key,
-                             value in prediction.items() if value > 0.8}
+        offensive_entries = [{"label": key, "score": float(value)} for key,
+                             value in prediction.items() if value > 0.8]
         if offensive_entries:
-            offensive_entries_text = [f"{int(value * 100)}% of {key.capitalize()}" for key,
-                                      value in offensive_entries.items()]
+            offensive_entries_text = [f"{int(value.get("score") * 100)}% of {value.get("label", "").capitalize()}" for
+                                      value in offensive_entries]
             return {
                 "status": True,
-                "reason": f"The content provided has toxic elements associated with it with: {", ".join(offensive_entries)}",
-                "labels": offensive_entries
+                "reason": f"The content provided has toxic elements associated with it with: {", ".join(offensive_entries_text)}",
+                "labels": offensive_entries,
+                "toxic": True
             }
         else:
-            return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None}
+            return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "toxic": False}
 
 
 class TamilToxicContentClassifier:
@@ -63,10 +64,10 @@ class TamilToxicContentClassifier:
         result = self.pipeline(text)[0]
         match result:
             case "Not_offensive":
-                return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None}
+                return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "toxic": False}
             case "Off_target_other":
-                return {"status": True, "reason": "The content provided has toxic elements associated with it, aiming at offending other parties.", "labels": [result]}
+                return {"status": True, "reason": "The content provided has toxic elements associated with it, aiming at offending other parties.", "labels": [result], "toxic": True}
             case "Profanity":
-                return {"status": True, "reason": "The content provided has toxic elements associated with it as it uses profane language.", "labels": [result]}
+                return {"status": True, "reason": "The content provided has toxic elements associated with it as it uses profane language.", "labels": [result], "toxic": True}
             case _:
-                return {"status": True, "reason": "The content provided has toxic elements associated with it as it contains offensive entities.", "labels": [result]}
+                return {"status": True, "reason": "The content provided has toxic elements associated with it as it contains offensive entities.", "labels": [result], "toxic": True}

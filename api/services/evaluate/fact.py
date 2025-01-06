@@ -1,8 +1,8 @@
 import aiohttp
 import logging
-from models.fact import FactCheckResponse
-from config.constants import FACT_CHECKER_API_ENDPOINT as url
-from config.constants import FACT_CHECKER_API_HEADERS as headers
+from api.models.fact import FactCheckResponse
+from api.config.constants import FACT_CHECKER_API_ENDPOINT as url
+from api.config.constants import FACT_CHECKER_API_HEADERS as headers
 
 
 async def check_fact_accuracy(text: str):
@@ -25,9 +25,9 @@ async def check_fact_accuracy(text: str):
                 if len(contents):
                     accuracy = (true_facts / len(contents)) * 100
                 if false_contents:
-                    return {"status": True, "accuracy": accuracy, "reason": "The provided content contains inaccurate information.", "false_content": false_contents}
+                    return {"status": True, "score": accuracy, "reason": "The provided content contains inaccurate information.", "false_content": false_contents, "accuracy": True}
                 else:
-                    return {"status": False, "accuracy": accuracy, "reason": "The provided content contains accurate information or is self-sufficient.", "false_content": None}
+                    return {"status": False, "score": accuracy, "reason": "The provided content contains accurate information or is self-sufficient.", "false_content": None, "accuracy": False}
 
             else:
                 raise Exception(f"{response.status}")

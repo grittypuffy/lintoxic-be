@@ -55,12 +55,12 @@ class AudioProcessor:
                 transcription = recognizer.recognize_google(audio_text)
                 return {"transcription": transcription}
             except:
-                return {"error": "Error Occured"}
+                return {"error": "An error occured during transcription"}
 
     def process_audio(self, file: str, target_lang: str = 'en_XX'):
         transcription = self.speech_to_text(file)
         if transcription.get("error"):
-            return None
+            return {"error": "Unable to get the transcription for the given audio"}
 
         detected_lang = self.predict_language(
             transcription.get("transcription"))
@@ -68,7 +68,7 @@ class AudioProcessor:
             return transcription.get("transcription")
 
         if not detected_lang:
-            return {"error": "Unable to detect language."}
+            return {"error": "Unable to detect language for the given transcription"}
 
         lang_mapping = {
             'en': 'en_XX',
@@ -81,4 +81,4 @@ class AudioProcessor:
         source_lang_code = lang_mapping.get(detected_lang, 'en_XX')
         translated_text = self.translate_text(
             transcription.get("transcription"), source_lang_code)
-        return translated_text.get("translation")
+        return {"transcription": translated_text.get("translation")}

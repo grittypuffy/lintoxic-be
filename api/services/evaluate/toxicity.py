@@ -1,18 +1,21 @@
+import asyncio
 import logging
-from services.processors.toxicity.classifier import ToxicContentClassifier, TamilToxicContentClassifier
 
 
-def check_toxicity(text: str):
-    toxic_content_classifier: ToxicContentClassifier = ToxicContentClassifier.get_instance()
-    result = toxic_content_classifier.predict(text)
+from api.services.processors.toxicity.classifier import ToxicContentClassifier, TamilToxicContentClassifier
+from api.config import AppConfig, get_config
 
-    if result.get("status"):
-        return result
+config: AppConfig = get_config()
 
-    tamil_toxic_content_classifier: TamilToxicContentClassifier = TamilToxicContentClassifier.get_instance()
-    result = tamil_toxic_content_classifier.predict(text)
 
-    if result.get("status"):
-        return result
+async def check_toxicity(text: str):
+    results = await asyncio.gather(
+        asyncio.to_thread(config.toxic_content_classifier.predict, text),
+        asyncio.to_thread(config.tamil_toxic_content_classifier.predict, text),
+    )
+
+    for result in results:
+        if result.get("status"):
+            return result
 
     return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None}

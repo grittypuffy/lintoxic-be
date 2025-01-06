@@ -23,8 +23,8 @@ class NSFWImageClassificationModel:
             model_name)
         self.processor = ViTImageProcessor.from_pretrained(model_name)
 
-    def predict(self, *, image_path: Optional[str] = None, image_content: Optional[Image] = None):
-        img = Image.open(image_path) if image_path else image_content
+    def predict(self, image_path: str):
+        img = Image.open(image_path)
         inputs = self.processor(images=img, return_tensors="pt")
 
         with torch.no_grad():
@@ -32,7 +32,7 @@ class NSFWImageClassificationModel:
             logits = outputs.logits
 
         predicted_label = logits.argmax(-1).item()
-        if predicted_label[0]:
-            return {"status": True if predicted_label else False, "reason": f"The content is not safe for work and is classified under the following label: {self.model.config.id2label[predicted_label]}"}
+        if predicted_label:
+            return {"status": True if predicted_label else False, "reason": f"The content is not safe for work and is classified under the following label: {self.model.config.id2label[predicted_label]}", "labels": [{"label": self.model.config.id2label[predicted_label]}], "nsfw": True}
         else:
-            return {"status": True if predicted_label else False, "reason": f"The content is safe for work."}
+            return {"status": True if predicted_label else False, "reason": f"The content is safe for work.", "labels": None, "nsfw": False}
