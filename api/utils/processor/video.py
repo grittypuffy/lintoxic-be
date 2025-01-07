@@ -5,7 +5,9 @@ import uuid
 import numpy as np
 from datetime import datetime
 from pathlib import Path
-from moviepy import VideoFileClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
+# from moviepy import VideoFileClip
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 import glob
@@ -85,25 +87,26 @@ class VideoProcessor:
 
     def extract_audio_from_video(self, video_path: str, temp_dir_name: str):
         try:
-            # Load the video clip
-            video_clip = VideoFileClip(video_path)
-
-            # Extract audio
+            audio_clip = AudioFileClip(video_path, fps=44100)
             audio_clip = video_clip.audio
-
-            # Write the audio to a file
+            print(audio_clip)
+            print(video_clip)
+            print("audio clip")
+            audio_dir = os.path.join(
+                env.preprocessing_dir, temp_dir_name, "audio.wav")
+            print(audio_dir)
             audio_clip.write_audiofile(
-                os.path.join(temp_dir_name, "audio.flac"), codec='flac')
-
-            # Close the video clip
+                os.path.join(env.preprocessing_dir, temp_dir_name, "audio.wav"), codec="pcm_s32le")
+            print("audio clip processed")
             video_clip.close()
 
-            return os.path.join(temp_dir_name, "audio.flac")
+            return os.path.join(temp_dir_name, "audio.wav")
         except Exception as e:
+            print(e)
             return "Error occurred: " + str(e)
 
     async def process_video(self, path: str):
-        temporary_directory_id = uuid.uuid4()
+        temporary_directory_id = str(uuid.uuid4())
         frames_dir = self.create_temporary_folder(temporary_directory_id)
         self.extract_frames(path, frames_dir)
         text = self.extract_text_from_images(frames_dir)
@@ -111,10 +114,9 @@ class VideoProcessor:
             path, temporary_directory_id)
 
         results = await asyncio.gather(
-            asyncio.to_thread(evaluate_text, text),
-            asyncio.to_thread(
-                evaluate_audio, audio_path),
-            asyncio.to_thread(self.evaluate_images, frames_dir)
+            evaluate_text(text),
+            evaluate_audio(audio_path),
+            self.evaluate_images(frames_dir)
         )
         for result in results:
             if result.get("status"):

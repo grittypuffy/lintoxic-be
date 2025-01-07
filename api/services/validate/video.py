@@ -1,17 +1,14 @@
 import asyncio
 
 from api.services.validate.text import evaluate_text
-from api.services.processors.audio import AudioProcessor
+from api.utils.processor.video import VideoProcessor
 
-audio_processor = AudioProcessor.get_instance()
+video_processor = VideoProcessor.get_instance()
 
 
 async def evaluate_video(path: str):
-    transcription = audio_processor.process_audio(path)
-
-    if (text := transcription.get("transcription")):
-        result = await evaluate_text(text)
-        if result.get("status"):
-            return result
+    result = await video_processor.process_video(path)
+    if result.get("status"):
+        return result
 
     return {"status": False, "reason": "The content provided does not have any toxic elements or inaccuracies associated with it.", "labels": None, "nsfw": False, "accuracy": False, "toxicity": False}

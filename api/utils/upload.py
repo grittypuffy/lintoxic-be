@@ -3,6 +3,8 @@ from typing import Optional
 from api.helpers.filename import get_filename_hash
 from api.config import AppConfig, get_config
 from api.services.validate import evaluate_audio, evaluate_image, evaluate_text, evaluate_video
+from api.utils.email import send_email
+
 import bson
 
 
@@ -50,6 +52,14 @@ async def update_log(timestamp: int, user_id: str, process_id: str, completed: b
         } if result else None
     }
     db_result = await config.db["logs"].update_one({"_id": bson.objectid.ObjectId(object_id)}, {"$set": db_document})
+    violation_record = await config.db["violations"].find_one({"user_id": user_id})
+    violations = violation_record.get("violations", 0) + 1
+    if (v_id := violation_record.get("_id")):
+        db_result = await config.db["violations"].update_one({"_id": v_id}, {"$set": {"violation": violation_record.get("violations") + 1, "records": violation_record.get("records").append(db_document)}})
+    else:
+        db_result = await config.db["violations"].insert_one({"user_id": user_id, "violation": 1, "records": [db_document]})
+    if violations > 5:
+        send_email(user_id, violations)
     return db_result
 
 
@@ -94,7 +104,7 @@ async def upload_file(file_content: bytes, filename: str, filetype: str, process
                                                 completed=True, filename=filename, filetype=filetype, content=None, result=result, object_id=pending_insertion_id)
                 return result
 
-        case "video/mpeg":
+        case "video/mpeg" | "video/mp4":
             result = await evaluate_video(hashed_file_path)
             if result.get("status"):
                 insertion_id = await_log(timestamp=timestamp, user_id=user_id, process_id=process_id,

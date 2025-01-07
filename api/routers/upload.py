@@ -22,7 +22,7 @@ config = AppConfig()
 async def upload_file(background_tasks: BackgroundTasks, file: UploadFile) -> UploadResponse:
     try:
         timestamp = int(time.time())
-        if file.content_type not in ["audio/mpeg", "audio/ogg", "audio/x-flac", "image/jpeg", "image/png", "text/plain", "audio/wav", "audio/flac", "video/mpeg"]:
+        if file.content_type not in ["video/mp4", "audio/mpeg", "audio/ogg", "audio/x-flac", "image/jpeg", "image/png", "text/plain", "audio/wav", "audio/flac", "video/mpeg"]:
             return Exception(f"The file of type {file.content_type} is not accepted")
         file_content = await file.read()
         process_id = str(uuid.uuid4())
