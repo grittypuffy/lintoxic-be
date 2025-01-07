@@ -8,11 +8,11 @@ env: EnvVarConfig = get_env_config()
 
 def send_email(user_id: str, violations: str):
     # Email credentials and SMTP server details
-    smtp_server = config.env.smtp_server
+    smtp_server = env.smtp_server
     smtp_port = 587  # For TLS
-    sender_email = config.env.sender_email
-    receiver_email = config.env.receiver_email
-    sender_password = config.env.sender_pw
+    sender_email = env.sender_email
+    receiver_email = env.receiver_email
+    sender_password = env.sender_pw
 
     # Compose the email
     subject = 'Violation of community guidelines'
