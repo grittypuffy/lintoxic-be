@@ -5,7 +5,6 @@ import uuid
 import numpy as np
 from datetime import datetime
 from pathlib import Path
-from moviepy import VideoFileClip
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 import glob
@@ -85,19 +84,6 @@ class VideoProcessor:
 
     def extract_audio_from_video(self, video_path: str, temp_dir_name: str):
         try:
-            # Load the video clip
-            video_clip = VideoFileClip(video_path)
-
-            # Extract audio
-            audio_clip = video_clip.audio
-
-            # Write the audio to a file
-            audio_clip.write_audiofile(
-                os.path.join(temp_dir_name, "audio.flac"), codec='flac')
-
-            # Close the video clip
-            video_clip.close()
-
             return os.path.join(temp_dir_name, "audio.flac")
         except Exception as e:
             return "Error occurred: " + str(e)

@@ -34,6 +34,6 @@ async def check_fact_accuracy(text: str):
                     raise Exception(f"{response.status}")
         i += 125
     if false_contents:
-        return {"status": True, "score": accuracy, "reason": "The provided content contains inaccurate information.", "false_content": false_contents, "accuracy": True}
+        return {"status": True, "score": accuracy, "reason": f"The provided content contains inaccurate information. {false_contents[0].get("explanations")}", "false_content": false_contents, "accuracy": True}
     else:
         return {"status": False, "score": accuracy, "reason": "The provided content contains accurate information or is self-sufficient.", "false_content": None, "accuracy": False}

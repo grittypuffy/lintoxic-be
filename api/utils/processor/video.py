@@ -5,12 +5,11 @@ import uuid
 import numpy as np
 from datetime import datetime
 from pathlib import Path
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.audio.io.AudioFileClip import AudioFileClip
-# from moviepy import VideoFileClip
 from concurrent.futures import ProcessPoolExecutor
 import multiprocessing
 import glob
+
+from audio_extract import extract_audio
 
 from api.config.environment import EnvVarConfig, get_env_config
 from api.services.processors.image import extract_text
@@ -87,23 +86,14 @@ class VideoProcessor:
 
     def extract_audio_from_video(self, video_path: str, temp_dir_name: str):
         try:
-            audio_clip = AudioFileClip(video_path, fps=44100)
-            audio_clip = video_clip.audio
-            print(audio_clip)
-            print(video_clip)
-            print("audio clip")
-            audio_dir = os.path.join(
+            audio_path = os.path.join(
                 env.preprocessing_dir, temp_dir_name, "audio.wav")
-            print(audio_dir)
-            audio_clip.write_audiofile(
-                os.path.join(env.preprocessing_dir, temp_dir_name, "audio.wav"), codec="pcm_s32le")
-            print("audio clip processed")
-            video_clip.close()
-
-            return os.path.join(temp_dir_name, "audio.wav")
+            _ = extract_audio(input_path=video_path,
+                              output_path=audio_path, output_format="wav")
+            return audio_path
         except Exception as e:
             print(e)
-            return "Error occurred: " + str(e)
+            return None
 
     async def process_video(self, path: str):
         temporary_directory_id = str(uuid.uuid4())
@@ -112,14 +102,24 @@ class VideoProcessor:
         text = self.extract_text_from_images(frames_dir)
         audio_path = self.extract_audio_from_video(
             path, temporary_directory_id)
+        if audio_path:
+            results = await asyncio.gather(
+                evaluate_text(text),
+                evaluate_audio(audio_path),
+                self.evaluate_images(frames_dir)
+            )
+            for result in results:
+                if result.get("status"):
+                    return result
 
-        results = await asyncio.gather(
-            evaluate_text(text),
-            evaluate_audio(audio_path),
-            self.evaluate_images(frames_dir)
-        )
-        for result in results:
-            if result.get("status"):
-                return result
+            return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "nsfw": False, "accuracy": False, "toxicity": False}
+        else:
+            results = await asyncio.gather(
+                evaluate_text(text),
+                self.evaluate_images(frames_dir)
+            )
+            for result in results:
+                if result.get("status"):
+                    return result
 
-        return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "nsfw": False, "accuracy": False, "toxicity": False}
+            return {"status": False, "reason": "The content provided does not have any toxic elements associated with it.", "labels": None, "nsfw": False, "accuracy": False, "toxicity": False}

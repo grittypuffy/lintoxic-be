@@ -10,8 +10,9 @@ from fastapi.responses import JSONResponse
 
 from api.models.upload import UploadResponse, UploadContent
 from api.config import AppConfig, get_config
-from api.utils.upload import upload_file
 import api.utils as utils
+# from api.workers.upload import upload_file as upload_file_task
+# from api.workers.upload import upload_content as upload_content_task
 
 router = APIRouter()
 
@@ -27,10 +28,14 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile) -> Up
         file_content = await file.read()
         process_id = str(uuid.uuid4())
         user_id = str(uuid.uuid4())
+        '''
+        upload_file_task.apply_async(
+            file_content, file.filename, file.content_type, process_id, user_id, timestamp)
+        '''
         background_tasks.add_task(
             utils.upload.upload_file, file_content, file.filename, file.content_type, process_id, user_id, timestamp)
         upload_response = UploadResponse()
-        return JSONResponse(content=upload_response.dict(), status_code=201)
+        return JSONResponse(content=upload_response.dict(), status_code=202)
     except Exception as e:
         logging.error(e)
         upload_response = UploadResponse(
@@ -39,15 +44,25 @@ async def upload_file(background_tasks: BackgroundTasks, file: UploadFile) -> Up
 
 
 @router.post("/content")
-async def upload_file(background_tasks: BackgroundTasks, content: UploadContent) -> UploadResponse:
+async def upload_content(background_tasks: BackgroundTasks, content: UploadContent) -> UploadResponse:
     try:
         timestamp = int(time.time())
         process_id = str(uuid.uuid4())
         user_id = str(uuid.uuid4())
+        '''
+        task_id = upload_content_task.apply_async(
+            kwargs={
+                'content': content.content,
+                'process_id': process_id,
+                'user_id': user_id,
+                'timestamp': timestamp
+            })
+        print(task_id)
+        '''
         background_tasks.add_task(
             utils.upload.upload_content, content.content, process_id, user_id, timestamp)
         upload_response = UploadResponse()
-        return JSONResponse(content=upload_response.dict(), status_code=201)
+        return JSONResponse(content=upload_response.dict(), status_code=202)
     except Exception as e:
         logging.error(e)
         upload_response = UploadResponse(

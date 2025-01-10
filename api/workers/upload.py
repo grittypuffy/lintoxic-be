@@ -1,70 +1,20 @@
 import os
 from typing import Optional
+from celery import shared_task
+
 from api.helpers.filename import get_filename_hash
 from api.config import AppConfig, get_config
 from api.services.validate import evaluate_audio, evaluate_image, evaluate_text, evaluate_video
 from api.utils.email import send_email
+from api.utils.upload import insert_log, update_log
+from api.config.celery import get_celery_instance
 
-import bson
-
+app = get_celery_instance()
 
 config: AppConfig = get_config()
 
 
-async def insert_log(timestamp: int, user_id: str, process_id: str, completed: bool, filename: Optional[str], filetype: Optional[str], content: Optional[str], result: Optional[dict]):
-    db_document = {
-        "timestamp": timestamp,
-        "user_id": user_id,
-        "process_id": process_id,
-        "completed": True,
-        "filename": filename,
-        "filetype": filetype,
-        "content": content,
-        "results": {
-            "harmful": True,
-            "toxicity": result.get("toxicity", False),
-            "accuracy": result.get("accuracy", False),
-            "nsfw": result.get("nsfw", False),
-            "reason": result.get("reason"),
-            "labels": result.get("labels", None)
-        } if result else None
-    }
-    db_result = await config.db["logs"].insert_one(db_document)
-    return db_result
-
-
-async def update_log(timestamp: int, user_id: str, process_id: str, completed: bool, filename: Optional[str], filetype: Optional[str], content: Optional[str], result: Optional[dict], object_id: str):
-    db_document = {
-        "timestamp": timestamp,
-        "user_id": user_id,
-        "process_id": process_id,
-        "completed": True,
-        "filename": filename,
-        "filetype": filetype,
-        "content": content,
-        "results": {
-            "harmful": True,
-            "toxicity": result.get("toxicity", False),
-            "accuracy": result.get("accuracy", False),
-            "nsfw": result.get("nsfw", False),
-            "reason": result.get("reason"),
-            "labels": result.get("labels", None)
-        } if result else None
-    }
-    db_result = await config.db["logs"].update_one({"_id": bson.objectid.ObjectId(object_id)}, {"$set": db_document})
-    violation_record = await config.db["violations"].find_one({"user_id": user_id})
-    violations = 1
-    if violation_record:
-        violations = violation_record.get("violations", 0) + 1
-        if (v_id := violation_record.get("_id")):
-            db_result = await config.db["violations"].update_one({"_id": v_id}, {"$set": {"violation": violation_record.get("violations") + 1, "records": violation_record.get("records").append(db_document)}})
-    else:
-        db_result = await config.db["violations"].insert_one({"user_id": user_id, "violation": 1, "records": [db_document]})
-    if violations > 5:
-        send_email(user_id, violations)
-    return db_result
-
-
+@shared_task(ignore_result=False)
 async def upload_file(file_content: bytes, filename: str, filetype: str, process_id: str, user_id: str, timestamp: int):
     hashed_file_name, _ = get_filename_hash(filename)
     hashed_file_path = os.path.join(config.env.upload_dir, hashed_file_name)
@@ -114,11 +64,12 @@ async def upload_file(file_content: bytes, filename: str, filetype: str, process
                 return result
 
 
+@shared_task(ignore_result=False)
 async def upload_content(content: str, process_id: str, user_id: str, timestamp: int):
-    pending_insertion_id = await insert_log(timestamp=timestamp, user_id=user_id, process_id=process_id,
-                                            completed=False, filename=None, filetype=None, content=content, result=None)
+    pending_insertion_id = await insert_log(timestamp, user_id, process_id,
+                                            False, None, None, content, None)
     result = await evaluate_text(content)
     if result.get("status"):
-        insertion_id = await update_log(timestamp=timestamp, user_id=user_id, process_id=process_id,
-                                        completed=True, filename=None, filetype=None, content=content, result=result, object_id=str(pending_insertion_id.inserted_id))
+        insertion_id = await update_log(timestamp, user_id, process_id,
+                                        True, None, None, content, result, str(pending_insertion_id.inserted_id))
     return result

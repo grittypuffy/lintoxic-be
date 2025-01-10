@@ -32,7 +32,7 @@ COPY .env .
 
 COPY ./api ./api
 
-RUN . ./bin/activate && pip install -e .
+RUN . ./bin/activate && pip install -r requirements.txt
 
 RUN apt-get update && apt-get install -y \
     libgdk-pixbuf2.0 \

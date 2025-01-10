@@ -26,8 +26,8 @@ python-dotenv = "^1.0.1"
 celery = {version = "^5.4.0", extras = ["redis"]}
 redis = "^5.2.1"
 python-multipart = "^0.0.20"
-moviepy = "^2.1.1"
 pydub = "^0.25.1"
+audio-extract = "^0.7.0"
 
 
 [build-system]

@@ -5,7 +5,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - lintoxic_redis_data:/data/lintoxic/redis
+      - lintoxic_redis_data:/data/lintoxic/redis/
     networks:
       - lintoxic_network
     restart: always
@@ -14,9 +14,9 @@ services:
     image: "mongo:latest"
     container_name: "lintoxic-database"
     ports:
-      - "27017:27017"  # MongoDB default port
+      - "27017:27017"
     volumes:
-      - lintoxic_mongo_data:/data/lintoxic/mongo  # Persist MongoDB data
+      - lintoxic_mongo_data:/data/lintoxic/mongo/
     networks:
       - lintoxic_network
     restart: always
@@ -25,6 +25,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      .env
     depends_on:
       - lintoxic-redis
       - lintoxic-database
